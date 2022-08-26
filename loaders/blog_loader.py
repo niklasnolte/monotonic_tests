@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+mono_list = [50, 51, 52, 53, 55, 56, 57, 58]
+
 def generate_one_hot_mat(mat):
     upper_bound = np.max(mat)
     mat_one_hot = np.zeros((mat.shape[0], int(upper_bound+1)))
@@ -121,5 +123,3 @@ def load_data(get_categorical_info=True):
         return X_train, y_train, X_test, y_test, start_index, cat_length 
     else:
         return X_train, y_train, X_test, y_test
-
-load_data()

@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+mono_list = [0, 1, 2, 3, 4]
+
 def generate_one_hot_mat(mat):
     upper_bound = np.max(mat)
     mat_one_hot = np.zeros((mat.shape[0], int(upper_bound+1)))
@@ -24,7 +26,6 @@ def normalize_data_ours(data_train, data_test):
     
     data_feature_normalized = np.zeros((n_train+n_test, 1))
     class_list = []
-    mono_list = [0, 1, 2, 3, 4]
 #     class_list = [1, 3, 5, 6, 7, 8, 9, 13]
 #     mono_list = [4, 10, 12]
     ### store the class variables
@@ -78,9 +79,9 @@ def normalize_data_ours(data_train, data_test):
     
     return data_train, data_test, start_index, cat_length 
 
-def load_data(get_categorical_info=True):
+def load_data(path="./data/preprocessed.csv", get_categorical_info=True):
 
-    data = pd.read_csv('./preprocessed.csv')
+    data = pd.read_csv(path)
     data['grade'] = data['grade'].replace({'A':7, 'B':6, 'C':5, 'D':4, 'E':3, 'F':2, 'G':1})
     grade = data['grade']
     data = data.drop('grade', axis=1)
@@ -92,8 +93,8 @@ def load_data(get_categorical_info=True):
     #print(data['pub_rec_bankruptcies'].value_counts())
     #data.dropna(axis=0)
     #print(data.shape)
-    for col in data.columns:
-        print(col) 
+    # for col in data.columns:
+    #     print(col) 
 
     data = np.array(data.values)
     data = data[:, 1:]
@@ -133,5 +134,3 @@ def load_data(get_categorical_info=True):
         return X_train, y_train, X_test, y_test, start_index, cat_length 
     else:
         return X_train, y_train, X_test, y_test
-
-load_data()
