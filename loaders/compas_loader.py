@@ -77,7 +77,7 @@ def normalize_data_ours(data_train, data_test):
     
     return data_train, data_test, start_index, cat_length 
 
-def load_data(path = "./compas_scores_two_years.csv", get_categorical_info=True):
+def load_data(path = "./data/compas_scores_two_years.csv", get_categorical_info=True):
 
     data = pd.read_csv(path)
     #print(data) 

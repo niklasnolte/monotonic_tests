@@ -1,11 +1,7 @@
-### simple 2-d case with PyTorch
-### monotonic: capital-gain, weekly hours of work and education level, and the gender wage gap
-import sys
-sys.path.append('../')
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from compas_loader import load_data
+from loaders.compas_loader import load_data
 import torch.utils.data as Data
 from monotonenorm import SigmaNet, direct_norm, GroupSort
 from sklearn.metrics import balanced_accuracy_score, accuracy_score
