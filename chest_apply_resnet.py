@@ -1,20 +1,19 @@
 # %%
 import torch
 from tqdm import tqdm
+from torchvision.models import resnet18
+from torch.utils.data import DataLoader
 
 # %%
 basepath = '/data/nnolte/chest_xray/'
 XIMG = torch.load(basepath+"XIMG.pt")
+# %%
 
-# make a dataloader
-from torch.utils.data import DataLoader
-from torchvision import transforms
-
-loader = DataLoader(XIMG, batch_size=32, shuffle=False)
+loader = DataLoader(XIMG, batch_size=128, shuffle=False)
 
 # %%
 device = torch.device("cpu")#torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-resnet = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=True).eval().to(device)
+resnet = resnet18(pretrained=True)
 resnet.fc = torch.nn.Identity()
 
 # %%
@@ -26,8 +25,4 @@ new_features = torch.cat(new_features).float()
 
 # %%
 torch.save(new_features, basepath+"resnet18_features.pt")
-
-# %%
-
-
 
