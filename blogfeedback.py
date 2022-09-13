@@ -5,8 +5,8 @@ from tqdm import tqdm
 from loaders.blog_loader import load_data, mono_list
 from monotonenorm import SigmaNet, GroupSort
 import optuna
+import numpy as np
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 # %%
 Xtr, Ytr, Xts, Yts = load_data(get_categorical_info=False)
 input_dim = Xtr.shape[1]
@@ -40,8 +40,9 @@ monotone_constraints = [1 if i in mono_list else 0 for i in range(input_dim)]
 
 
 def run_exp(
-    max_lr=2e-3, expwidth=2, depth=4, Lip=8, monotonic=True, batchsize=256, seed=1
+    max_lr=2e-3, expwidth=2, depth=4, Lip=8, monotonic=True, batchsize=256, seed=1, gpu_id=0
 ):
+    device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(seed)
 
     Xtrt = torch.tensor(Xtr, dtype=torch.float32).to(device)
@@ -116,7 +117,7 @@ def run_exp(
     print(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=max_lr)
 
-    EPOCHS = 2000
+    EPOCHS = 1000
     lr_final = 1e-4
     gamma = (lr_final / max_lr) ** (1 / (EPOCHS * len(dataloader)))
     scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
@@ -142,33 +143,31 @@ def run_exp(
             )
     return best_rmse
 
-
-# run_exp(max_lr=7e-4, expwidth=2, depth=4, batchsize=1024, monotonic=True, seed=10, Lip=.5)
+# rmses = [run_exp(max_lr=.001, expwidth=1, depth=3, batchsize=2**9, monotonic=True, seed=i, Lip=.5) for i in range(3)]
+# print(f"mean: {np.mean(rmses):.4f}, std: {np.std(rmses):.4f}")
 # exit()
 
 # %%
 # run with optuna
 def objective(trial):
-    # balance on two gpus
-
     max_lr = trial.suggest_loguniform("max_lr", 5e-4, 3e-3)
-    width = trial.suggest_int("expwidth", 1, 4)
+    width = trial.suggest_int("expwidth", 1, 3)
     depth = trial.suggest_int("depth", 3,5)
-    batchsize = trial.suggest_int("batchsize", 128, 1024)
-    # seed = trial.suggest_int("seed", 1, 10)
+    batchsize = 2**trial.suggest_int("expbatchsize", 7, 10)
+    lip = trial.suggest_uniform("lip", .2, .7)
     return run_exp(
-        max_lr=max_lr, expwidth=width, batchsize=batchsize, seed=4, depth=depth, Lip=20
+        max_lr=max_lr, expwidth=width, batchsize=batchsize, seed=4, depth=depth, Lip=lip, gpu_id=trial._trial_id % 2
     )
 
 
 study = optuna.create_study(direction="minimize")
-study.optimize(objective, n_trials=100, n_jobs=8)
+study.optimize(objective, n_trials=400, n_jobs=10)
 
 # %%
 # print results
 print("Number of finished trials: {}".format(len(study.trials)))
-print("Best trial:")
-print("  Value: {}".format(study.best_trial.value))
+print(f"Best trial: {study.best_trial}")
+print(f"  Value: {study.best_trial.value}")
 # %%
 # save
 import pickle
