@@ -10,7 +10,7 @@ from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 
 # %%
-device = torch.device("cpu")
+device = torch.device("cuda:1")
 # %%
 basepath = "/data/nnolte/chest_xray/"
 XIMG = torch.load(basepath + "XIMG.pt")
