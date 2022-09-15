@@ -143,9 +143,9 @@ def run_exp(
             )
     return best_rmse
 
-# rmses = [run_exp(max_lr=.001, expwidth=1, depth=3, batchsize=2**9, monotonic=True, seed=i, Lip=.5) for i in range(3)]
-# print(f"mean: {np.mean(rmses):.4f}, std: {np.std(rmses):.4f}")
-# exit()
+rmses = [run_exp(max_lr=6e-4, expwidth=1, depth=3, batchsize=2**8, seed=i, Lip=.45) for i in range(3)]
+print(f"mean: {np.mean(rmses):.4f}, std: {np.std(rmses):.4f}")
+exit()
 
 # %%
 # run with optuna

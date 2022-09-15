@@ -71,6 +71,7 @@ for i in range(3):
     state_dict = torch.load(f"models/chest_classify_nn_{i}.pt")
 
     model = ResNet18Mono(monotonic=True, state_dict=state_dict).to(device)
+    print(f"num params {sum(p.numel() for p in model.monotonic.parameters())}")
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-3)
     EPOCHS = 100
