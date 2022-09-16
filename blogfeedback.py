@@ -53,9 +53,9 @@ def run_exp(
     # normalize training data
     mean = Xtrt.mean(0)
     std = Xtrt.std(0)
-
     Xtrt = (Xtrt - mean) / std
     Xtst = (Xtst - mean) / std
+
 
     dataloader = torch.utils.data.DataLoader(
         torch.utils.data.TensorDataset(Xtrt, Ytrt), batch_size=batchsize, shuffle=True
@@ -100,15 +100,15 @@ def run_exp(
             if sigma:
                 self.nn = SigmaNet(
                     self.nn,
-                    sigma=per_layer_lip ** depth,
+                    sigma=Lip,
                     monotone_constraints=monotone_constraints,
                 )
 
-            if monotonic:
-                # increase std of weights accordingly
-                for m in self.nn.modules():
-                    if isinstance(m, torch.nn.Linear):
-                        torch.nn.init.orthogonal_(m.weight)
+            # if monotonic:
+            #     # increase std of weights accordingly
+            #     for m in self.nn.modules():
+            #         if isinstance(m, torch.nn.Linear):
+            #             torch.nn.init.orthogonal_(m.weight)
 
         def forward(self, x):
             return self.nn(x)
@@ -117,33 +117,29 @@ def run_exp(
     print(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=max_lr)
 
-    EPOCHS = 1000
-    lr_final = 1e-4
-    gamma = (lr_final / max_lr) ** (1 / (EPOCHS * len(dataloader)))
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
+    EPOCHS = 2000
     print("params:", sum(p.numel() for p in model.parameters()))
     bar = tqdm(range(EPOCHS))
     best_rmse = 1
     for _ in bar:
         for Xi, yi in dataloader:
-            y_pred = model(Xi)
+            y_pred = model(Xi) / 4
             losstr = torch.nn.functional.mse_loss(y_pred, yi)
             optimizer.zero_grad()
             losstr.backward()
             optimizer.step()
-            # scheduler.step()
         with torch.no_grad():
-            y_predts = model(Xtst)
+            y_predts = model(Xtst) / 4
             lossts = torch.nn.functional.mse_loss(y_predts, Ytst)
             tsrmse = lossts.item() ** 0.5
             trrmse = losstr.item() ** 0.5
             best_rmse = min(best_rmse, tsrmse)
             bar.set_description(
-                f"train rmse: {trrmse:.4f} test rmse: {tsrmse:.4f}, best: {best_rmse:.4f}, lr: {scheduler.get_last_lr()[0]:.4f}"
+                f"train rmse: {trrmse:.4f} test rmse: {tsrmse:.4f}, best: {best_rmse:.4f}"
             )
     return best_rmse
 
-rmses = [run_exp(max_lr=6e-4, expwidth=1, depth=3, batchsize=2**8, seed=i, Lip=.45) for i in range(3)]
+rmses = [run_exp(max_lr=6e-4, expwidth=4, depth=4, batchsize=2**8, seed=i, Lip=3) for i in range(11,21)]
 print(f"mean: {np.mean(rmses):.4f}, std: {np.std(rmses):.4f}")
 exit()
 
