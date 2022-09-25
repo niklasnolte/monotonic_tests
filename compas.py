@@ -6,6 +6,7 @@ from monotonenorm import SigmaNet, direct_norm, GroupSort
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import numpy as np
+import lightgbm as lgb
 
 device = torch.device("cuda:1")
 
@@ -19,7 +20,6 @@ y_train = torch.tensor(y_train).float().unsqueeze(1).to(device)
 y_test = torch.tensor(y_test).float().unsqueeze(1).to(device)
 data_train = Data.TensorDataset(X_train, y_train)
 
-
 print(X_train.shape)
 
 criterion = nn.BCEWithLogitsLoss()
@@ -31,16 +31,16 @@ def run(seed):
   acc = 0
   torch.manual_seed(seed)
 
-  width = 16
+  width = 2
   
   network = torch.nn.Sequential(
-    direct_norm(torch.nn.Linear(13, width), kind="one-inf", alpha=per_layer_lip),
+    direct_norm(torch.nn.Linear(13, width), kind="one-inf", max_norm=per_layer_lip),
     GroupSort(width//2),
-    direct_norm(torch.nn.Linear(width, width), kind="inf", alpha=per_layer_lip),
+    direct_norm(torch.nn.Linear(width, width), kind="inf", max_norm=per_layer_lip),
     GroupSort(width//2),
-    direct_norm(torch.nn.Linear(width, width), kind="inf", alpha=per_layer_lip),
+    direct_norm(torch.nn.Linear(width, width), kind="inf", max_norm=per_layer_lip),
     GroupSort(width//2),
-    direct_norm(torch.nn.Linear(width, 1), kind="inf", alpha=per_layer_lip),
+    direct_norm(torch.nn.Linear(width, 1), kind="inf", max_norm=per_layer_lip),
   )
   network = SigmaNet(network, sigma=per_layer_lip**4, monotone_constraints=[1]*mono_feature + [0]*(13-mono_feature))
   
@@ -53,8 +53,8 @@ def run(seed):
   
   data_train_loader = Data.DataLoader(
       dataset=data_train,      
-      batch_size=512,     
-      shuffle=True,               
+      batch_size=256,
+      shuffle=True,
   )
   bar = tqdm(range(1000))
   for i in bar:
