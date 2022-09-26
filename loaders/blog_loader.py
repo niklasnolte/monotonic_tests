@@ -28,7 +28,6 @@ def normalize_data_ours(data_train, data_test):
     
     data_feature_normalized = np.zeros((n_train+n_test, 1))
     class_list = []
-    mono_list = [50, 51, 52, 53, 55, 56, 57, 58]
     ### store the class variables
     start_index = []
     cat_length = []
