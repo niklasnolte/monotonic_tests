@@ -6,9 +6,8 @@ from monotonenorm import SigmaNet, direct_norm, GroupSort
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import numpy as np
-import lightgbm as lgb
 
-device = torch.device("cuda:1")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 X_train, y_train, X_test, y_test = load_data(get_categorical_info=False)
 
