@@ -1,35 +1,33 @@
 import torch
 from tqdm import tqdm
-from loaders.lending_loader import load_data, mono_list
-from monotonenorm import SigmaNet, GroupSort, direct_norm
-from sklearn.metrics import accuracy_score
+from monotone_utils import GroupSort, direct_norm, SigmaNet
 import numpy as np
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-Xtr, Ytr, Xts, Yts = load_data(get_categorical_info=False)
-monotonic_constraints = np.array([int(i in mono_list) for i in range(Xtr.shape[1])])
+from sklearn.metrics import accuracy_score
 
 
-def run_exp(seed):
+def run_exp(Xtr, Ytr, Xts, Yts, monotone_constraints, width, depth, seed):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(seed)
-
-    width = 16
 
     class Model(torch.nn.Module):
         def __init__(self, width):
             super().__init__()
-            activation = lambda: GroupSort(width//2)
+            activation = lambda: GroupSort(width // 2)
 
-            layers = torch.nn.Sequential(
+            layers = [
                 direct_norm(torch.nn.Linear(Xtr.shape[1], width), kind="one-inf"),
                 activation(),
-                direct_norm(torch.nn.Linear(width, width), kind="inf"),
-                activation(),
-                direct_norm(torch.nn.Linear(width, 1), kind="inf"),
-            )
+            ]
+            for _ in range(depth - 2):
+                layers.append(direct_norm(torch.nn.Linear(width, width), kind="inf"))
+                layers.append(activation())
+
+            layers.append(direct_norm(torch.nn.Linear(width, 1), kind="inf"))
+
             self.nn = SigmaNet(
-                layers, sigma=1, monotone_constraints=monotonic_constraints
+                torch.nn.Sequential(*layers),
+                sigma=1,
+                monotone_constraints=monotone_constraints,
             )
 
         def forward(self, x):
@@ -72,8 +70,7 @@ def run_exp(seed):
             acc = 0
             for i in np.linspace(0, 1, 100):
                 acc = max(
-                    acc,
-                    accuracy_score(Ytst.cpu().numpy(), y_predts.cpu().numpy() > i),
+                    acc, accuracy_score(Ytst.cpu().numpy(), y_predts.cpu().numpy() > i),
                 )
 
             max_acc = max(max_acc, acc)
@@ -81,10 +78,3 @@ def run_exp(seed):
                 f"Loss: {losstr.item():.4f} {lossts.item():.4f}, acc: {acc.item():.4f}, max_acc: {max_acc:.4f}"
             )
     return max_acc
-
-
-if __name__ == "__main__":
-    accs = [run_exp(i) for i in range(3)]  # 3 seeds
-    # print mean and std of the 3 runs
-    print(f"mean: {np.mean(accs):.4f}, std: {np.std(accs):.4f}")
-
