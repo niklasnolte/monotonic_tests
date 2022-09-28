@@ -5,7 +5,7 @@ from monotonenorm import SigmaNet, GroupSort
 from sklearn.metrics import accuracy_score
 import numpy as np
 
-device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 Xtr, Ytr, Xts, Yts = load_data(get_categorical_info=False)
 monotonic_constraints = [int(i in mono_list) for i in range(Xtr.shape[1])]
@@ -28,13 +28,13 @@ def run_exp(seed):
         activation = lambda : torch.nn.ReLU()
 
       self.nn = torch.nn.Sequential(
-        direct_norm(torch.nn.Linear(Xtr.shape[1], width), kind="one-inf", alpha=per_layer_lip),
+        direct_norm(torch.nn.Linear(Xtr.shape[1], width), kind="one-inf", max_norm=per_layer_lip),
         activation(),
-        direct_norm(torch.nn.Linear(width, width), kind="inf", alpha=per_layer_lip),
+        direct_norm(torch.nn.Linear(width, width), kind="inf", max_norm=per_layer_lip),
         activation(),
-        direct_norm(torch.nn.Linear(width, width), kind="inf", alpha=per_layer_lip),
+        direct_norm(torch.nn.Linear(width, width), kind="inf", max_norm=per_layer_lip),
         activation(),
-        direct_norm(torch.nn.Linear(width, 1), kind="inf", alpha=per_layer_lip),
+        direct_norm(torch.nn.Linear(width, 1), kind="inf", max_norm=per_layer_lip),
       )
       if sigma:
         self.nn = torch.nn.Sequential(
