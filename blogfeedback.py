@@ -1,10 +1,8 @@
 # %%
 import torch
-import lightgbm as lgb
 from tqdm import tqdm
 from loaders.blog_loader import load_data, mono_list
 from monotonenorm import SigmaNet, GroupSort
-import optuna
 import numpy as np
 
 # %%
@@ -15,38 +13,10 @@ print(Xtr.shape, Ytr.shape, Xts.shape, Yts.shape)
 
 # %%
 monotone_constraints = np.array([1 if i in mono_list else 0 for i in range(input_dim)])
-#monotone_constraints[monotone_constraints == 1] = 0
-
-clf = lgb.LGBMRegressor(
-    n_estimators=10000,
-    max_depth=5,
-    learning_rate=0.1,
-    monotone_constraints=monotone_constraints,
-)
-clf.fit(
-    Xtr,
-    Ytr,
-    early_stopping_rounds=200,
-    eval_set=[(Xts, Yts)],
-    eval_metric="rmse",
-    verbose=0,
-)
-
-
-# %%
-rmse_tr = (((clf.predict(Xtr) - Ytr) ** 2).mean()) ** 0.5
-rmse_ts = (((clf.predict(Xts) - Yts) ** 2).mean()) ** 0.5
-print(rmse_tr, rmse_ts)
-
-important_feature_idxs = np.argsort(clf.feature_importances_)[-10:]
-important_feature_idxs = list(set(important_feature_idxs) | set(mono_list))
-print(monotone_constraints[important_feature_idxs])
-
-# %%
 
 
 def run_exp(
-    max_lr=2e-3, expwidth=2, depth=4, Lip=1, monotonic=True, batchsize=256, seed=1, gpu_id=0
+    max_lr=2e-3, expwidth=3, depth=3, Lip=1, monotonic=True, batchsize=256, seed=1, gpu_id=0
 ):
     device = torch.device(f"cuda:{gpu_id}" if torch.cuda.is_available() else "cpu")
     torch.manual_seed(seed)
@@ -60,11 +30,6 @@ def run_exp(
     std = Xtrt.std(0)
     Xtrt = (Xtrt - mean) / std
     Xtst = (Xtst - mean) / std
-
-    # unimportant_features = np.arange(input_dim)[~np.isin(np.arange(input_dim), important_feature_idxs)]
-    # Xtrt[:, unimportant_features] = 0
-    # Xtst[:, unimportant_features] = 0
-    # model.nn.nn[0].parametrizations.weight.original.data[:, unimportant_features] = 0
 
 
     dataloader = torch.utils.data.DataLoader(
@@ -121,8 +86,9 @@ def run_exp(
 
     print(model)
     optimizer = torch.optim.Adam(model.parameters(), lr=max_lr)
-
     EPOCHS = 1000
+
+
     print("params:", sum(p.numel() for p in model.parameters()))
     bar = tqdm(range(EPOCHS))
     best_rmse = 1
@@ -142,51 +108,9 @@ def run_exp(
             trrmse = losstr.item() ** 0.5
             best_rmse = min(best_rmse, tsrmse)
             bar.set_description(
-                f"train rmse: {trrmse:.4f} test rmse: {tsrmse:.4f}, best: {best_rmse:.4f}, lr: {optimizer.param_groups[0]['lr']:.4f}"
+                f"train rmse: {trrmse:.5f} test rmse: {tsrmse:.5f}, best: {best_rmse:.5f}, lr: {optimizer.param_groups[0]['lr']:.5f}"
             )
     return best_rmse
 
-rmses = [run_exp(max_lr=2e-4, expwidth=3, depth=3, batchsize=2**8, seed=i, Lip=1, monotonic=True) for i in range(20,23)]
-print(f"mean: {np.mean(rmses):.4f}, std: {np.std(rmses):.4f}")
-exit()
-
-# %%
-# run with optuna
-# def objective(trial):
-#     max_lr = trial.suggest_loguniform("max_lr", 5e-5, 3e-3)
-#     width = trial.suggest_int("expwidth", 1, 3)
-#     depth = trial.suggest_int("depth", 2,5)
-#     batchsize = 2**trial.suggest_int("expbatchsize", 7, 10)
-#     lip = trial.suggest_uniform("lip", .4, 1.5)
-#     return run_exp(
-#         max_lr=max_lr, expwidth=width, batchsize=batchsize, seed=7, depth=depth, Lip=lip, gpu_id=trial._trial_id % 2
-#     )
-
-
-# study = optuna.create_study(direction="minimize")
-# study.optimize(objective, n_trials=1000, n_jobs=4)
-
-# # %%
-# # print results
-# print("Number of finished trials: {}".format(len(study.trials)))
-# print(f"Best trial: {study.best_trial}")
-# print(f"  Value: {study.best_trial.value}")
-# # %%
-# # save
-# import pickle
-
-# with open("optuna_blogfeedback.pkl", "wb") as f:
-#     pickle.dump(study, f)
-
-
-# monotonic network
-# f(x) = g(x) + 1*x , g(x) \in L^k, k = 10
-
-# x_i ~ P_x(mu=0,std=1), iid
-# g(x) ~ P_g(mu=0,std=O(1)), assume E(W_i) = 0, E(W_i^2) = 5 / fan_in
-
-# want f(x) ~ P_f(mu=0,std=1)
-
-
-# norm preserving maps:
-# <Ax, Ay> = <x, y
+rmses = [run_exp(max_lr=2e-4, expwidth=3, depth=2, batchsize=2**8, seed=i, Lip=1.5, monotonic=True, gpu_id=1) for i in range(3)]
+print(f"mean: {np.mean(rmses):.5f}, std: {np.std(rmses):.5f}")
