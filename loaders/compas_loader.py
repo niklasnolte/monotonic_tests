@@ -1,5 +1,9 @@
+## this has been left unchanged from the original code (Liu et al, Certified Monotonic Neural Networks, 2020)
+
 import numpy as np
 import pandas as pd
+
+mono_list = [0, 1, 2, 3]
 
 def generate_one_hot_mat(mat):
     upper_bound = np.max(mat)
@@ -24,7 +28,6 @@ def normalize_data_ours(data_train, data_test):
     
     data_feature_normalized = np.zeros((n_train+n_test, 1))
     class_list = [5, 6]
-    mono_list = [0, 1, 2, 3]
 #     class_list = [1, 3, 5, 6, 7, 8, 9, 13]
 #     mono_list = [4, 10, 12]
     ### store the class variables

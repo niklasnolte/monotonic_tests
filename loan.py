@@ -1,7 +1,7 @@
 import numpy as np
 
-from lending_exp import run_exp
-from loaders.lending_loader import load_data, mono_list
+from loan_exp import run_exp
+from loaders.loan_loader import load_data, mono_list
 
 
 Xtr, Ytr, Xts, Yts = load_data(get_categorical_info=False)
