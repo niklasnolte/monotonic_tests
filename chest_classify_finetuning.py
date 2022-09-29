@@ -1,7 +1,7 @@
 import os
 import torch
 from tqdm import tqdm
-from torchvision.models import resnet18
+from torchvision.models import resnet18, resnet
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.metrics import accuracy_score
@@ -21,10 +21,10 @@ Y = torch.tensor(torch.load(os.path.join(basepath, "Y.pt"))).float()
 class ResNet18Mono(torch.nn.Module):
     def __init__(self, state_dict):
         super().__init__()
-        resnet = resnet18(pretrained=True).requires_grad_(True)
-        monotone_constraint = [1, 1, 0, 0] + [0] * resnet.fc.in_features
-        resnet.fc = torch.nn.Identity()
-        self.resnet = resnet
+        rn = resnet18(weights=resnet.ResNet18_Weights.IMAGENET1K_V1).requires_grad_(True)
+        monotone_constraint = [1, 1, 0, 0] + [0] * rn.fc.in_features
+        rn.fc = torch.nn.Identity()
+        self.rn = rn
         width = 2
         layers = torch.nn.Sequential(
             direct_norm(
@@ -42,7 +42,7 @@ class ResNet18Mono(torch.nn.Module):
         self.monotonic.load_state_dict(state_dict)
 
     def forward(self, ximg, xtab):
-        ximg = self.resnet(ximg)
+        ximg = self.rn(ximg)
         x = torch.hstack([xtab, ximg])
         return self.monotonic(x)
 
