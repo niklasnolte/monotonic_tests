@@ -1,7 +1,13 @@
 # Experiments for "Expressive Monotonic Networks"
 
-Before starting, create a conda environment with the requirements.txt
+## Environment
+First, create a conda environment with the `requirements.yml`.  
+Sometimes conda environments might be a pain.  
+What you need is pytorch(1.12), numpy, tqdm, torchvision(0.13), pandas and scikit-learn.  
+Earlier torch versions also work, but torchvision needs to be at least 0.12, since ResNet weights have a different API in earlier versions.  
 
+
+## Running experiments
 We provide the data for BlogFeedback, COMPAS and LoanDefaulter datasets in the `data` folder.  
 Simply running `blogfeedback[_mini].py`, `compas.py` and `loan[_mini].py` will train the models and print out results.  
 
