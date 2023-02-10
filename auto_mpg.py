@@ -47,9 +47,9 @@ for seed in range(3):
 
 
   optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
-  epochs = 1000
+  epochs = 2000
 
-  rmse = float('inf')
+  mse = float('inf')
   bar = tqdm.tqdm(range(epochs))
   for epoch in bar:
     batch_size = 64
@@ -61,11 +61,11 @@ for seed in range(3):
       optimizer.step()
     with torch.no_grad():
       yhat = model(Xts)
-      # unscaled rmse
-      new_rmse = torch.sqrt(torch.mean((yhat * Ystd - Yts * Ystd) ** 2))
-      rmse = min(rmse, new_rmse.item())
-      bar.set_description(f"rmse: {new_rmse:.1f}, best: {rmse:.1f}")
-  rmses.append(rmse)
+      # unscaled mse
+      new_mse = torch.nn.functional.mse_loss(yhat * Ystd, Yts * Ystd)
+      mse = min(mse, new_mse.item())
+      bar.set_description(f"mse: {new_mse:.1f}, best: {mse:.1f}")
+  rmses.append(mse)
 
 # print mean and std
 print(f"mean: {torch.tensor(rmses).mean():.5f}, std: {torch.tensor(rmses).std():.5f}")
