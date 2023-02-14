@@ -5,7 +5,7 @@ from torchvision.models import resnet18
 from torch.utils.data import DataLoader
 import numpy as np
 from sklearn.metrics import accuracy_score
-from monotone_utils import GroupSort, SigmaNet, direct_norm
+from monotonenorm import GroupSort, SigmaNet, direct_norm
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 

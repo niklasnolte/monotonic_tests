@@ -1,11 +1,10 @@
-# %%
 import pandas as pd
 import torch
 from torch.nn import functional as F
 import tqdm
 #balanced accuracy
-from monotone_utils import GroupSort, direct_norm, SigmaNet
-# %%
+from monotonenorm import GroupSort, direct_norm, SigmaNet
+
 df_train = pd.read_csv("data/heart_train.csv")
 df_test = pd.read_csv("data/heart_test.csv")
 
@@ -19,7 +18,6 @@ def preprocess(df):
 Xtr, Ytr = preprocess(df_train)
 Xts, Yts = preprocess(df_test)
 
-# %%
 def get_acc(Yhat, Y):
   max_acc = 0
   for threshold in torch.linspace(-1, 1, 100):
@@ -27,7 +25,7 @@ def get_acc(Yhat, Y):
     acc = acc.sum().item() / acc.numel()
     max_acc = max(max_acc, acc)
   return max_acc
-# %%
+
 accs = []
 for seed in range(3):
   torch.manual_seed(seed)
@@ -70,8 +68,4 @@ for seed in range(3):
       bar.set_description(f"loss {loss.item():.3f} train acc: {train_acc:.3f}, test acc: {accuracy:.3f}, best acc: {best_acc:.3f}")
   accs.append(best_acc)
 
-
-# print mean and std
 print(f"mean: {torch.tensor(accs).mean():.3f}, std: {torch.tensor(accs).std():.4f}")
-
-# %%

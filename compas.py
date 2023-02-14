@@ -5,7 +5,7 @@ from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 import numpy as np
 
-from monotone_utils import SigmaNet, direct_norm, GroupSort
+from monotonenorm import SigmaNet, direct_norm, GroupSort
 
 device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
 

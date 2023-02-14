@@ -1,12 +1,11 @@
-# %%
 import pandas as pd
 import torch
 import tqdm
-from monotone_utils import GroupSort, direct_norm, SigmaNet
-# %%
+from monotonenorm import GroupSort, direct_norm, SigmaNet
+
 df = pd.read_csv('data/auto-mpg.csv')
 df = df[df.horsepower != "?"]
-# %%
+
 # mpg is regression target
 # cylinders, displacement, horsepower, weight, acceleration, model year, origin are features
 X = df.drop(columns=['mpg', 'car name']).values
@@ -17,7 +16,7 @@ X = (X - X.mean(0)) / X.std(0)
 Ymean = Y.mean(0)
 Ystd = Y.std(0)
 Y = (Y - Ymean) / Ystd
-# %%
+
 rmses = []
 for seed in range(3):
   torch.manual_seed(seed)
@@ -67,7 +66,4 @@ for seed in range(3):
       bar.set_description(f"mse: {new_mse:.1f}, best: {mse:.1f}")
   rmses.append(mse)
 
-# print mean and std
 print(f"mean: {torch.tensor(rmses).mean():.5f}, std: {torch.tensor(rmses).std():.5f}")
-
-# %%

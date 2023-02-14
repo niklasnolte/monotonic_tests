@@ -1,6 +1,6 @@
 import torch
 from tqdm import tqdm
-from monotone_utils import GroupSort, direct_norm, SigmaNet
+from monotonenorm import GroupSort, direct_norm, SigmaNet
 import numpy as np
 from sklearn.metrics import accuracy_score
 

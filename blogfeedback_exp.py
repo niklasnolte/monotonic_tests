@@ -1,5 +1,5 @@
 import torch
-from monotone_utils import SigmaNet, GroupSort, direct_norm
+from monotonenorm import SigmaNet, GroupSort, direct_norm
 from tqdm import tqdm
 
 def run_exp(
