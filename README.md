@@ -1,6 +1,6 @@
 # Experiments for "Expressive Monotonic Networks"
 
-Dependencies: torch, torchvision, numpy, pandas, tqdm, sklearn, monotonenorm (pip)
+Dependencies: torch, torchvision, numpy, pandas, tqdm, sklearn, monotonenorm (https://github.com/niklasnolte/monotonenorm)
 
 We provide the data for BlogFeedback, COMPAS and LoanDefaulter datasets in the `data` folder.
 Simply running `blogfeedback[_mini].py`, `compas.py`, `loan[_mini].py`, `heart_disease.py` and `auto_mpg.py` will train the models and print out results.
